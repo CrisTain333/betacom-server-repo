@@ -17,8 +17,34 @@ app.get("/", (req, res) => {
 });
 
 
+const run = () =>{
+    const productsCollection = client.db("betacom").collection("products");
+    const categoryCollection = client.db("betacom").collection("category");
 
 
+    try {
+
+      app.get('/category',async(req,res)=>{
+        const query = {}
+        const result = await categoryCollection.find(query).toArray();
+        res.send(result);
+      })
+    
+        app.get('/category/:id',async(req,res)=>{
+            const id = req.params.id
+            const filter = {categoryId: id}
+            const result =  await productsCollection.find(filter).toArray();
+            res.send(result)
+        })
+
+        
+    } finally {
+        
+    }
+
+}
+
+run()
 
 
 app.listen(PORT, () => {
