@@ -16,45 +16,44 @@ app.get("/", (req, res) => {
   res.send("Betacom Server On Fire");
 });
 
+const run = () => {
+  const productsCollection = client.db("betacom").collection("products");
+  const categoryCollection = client.db("betacom").collection("category");
+  const usersCollection = client.db("betacom").collection("users");
 
-const run = () =>{
-    const productsCollection = client.db("betacom").collection("products");
-    const categoryCollection = client.db("betacom").collection("category");
+  try {
+    app.get("/category", async (req, res) => {
+      const query = {};
+      const result = await categoryCollection.find(query).toArray();
+      res.send(result);
+    });
 
+    app.get("/category/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { categoryId: id };
+      const result = await productsCollection.find(filter).toArray();
+      res.send(result);
+    });
 
-    try {
+    app.post('/users',async(req,res)=>{
+      const user = req.body;
+      console.log(user);
+      const result =  await usersCollection.insertOne(user);
+      res.send(result);
+    })
 
-      app.get('/category',async(req,res)=>{
-        const query = {}
-        const result = await categoryCollection.find(query).toArray();
-        res.send(result);
-      })
-    
-        app.get('/category/:id',async(req,res)=>{
-            const id = req.params.id
-            const filter = {categoryId: id}
-            const result =  await productsCollection.find(filter).toArray();
-            res.send(result)
-        })
+  } finally {
+  }
+};
 
-        
-    } finally {
-        
-    }
-
-}
-
-run()
-
+run();
 
 app.listen(PORT, () => {
-    console.log(`Betacom server Running On Port ${PORT} `);
-    client.connect((err) => {
-      if (err) {
-        return console.log(err);
-      }
-      console.log("Connected To Database");
-    });
+  console.log(`Betacom server Running On Port ${PORT} `);
+  client.connect((err) => {
+    if (err) {
+      return console.log(err);
+    }
+    console.log("Connected To Database");
   });
-  
-  
+});
