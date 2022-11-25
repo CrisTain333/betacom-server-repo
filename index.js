@@ -42,6 +42,7 @@ const run = () => {
   const usersCollection = client.db("betacom").collection("users");
   const bookingsCollection = client.db("betacom").collection("booking");
   const paymentsCollection = client.db("betacom").collection("payment")
+  const sellersProductCollection = client.db("betacom").collection("SellersProduct")
 
   try {
     app.post("/jwt", (req, res) => {
@@ -149,6 +150,22 @@ const run = () => {
       );
       res.send(result);
     });
+
+    app.post('/product',async(req,res)=>{
+      const product = req.body;
+      const result = await productsCollection.insertOne(product);
+      res.send(result);
+    })
+
+    app.get('/products',async(req,res)=>{
+      const email = req.query.email
+      const query = {email : email};
+      const products =  await productsCollection.find(query).toArray();
+      res.send(products);
+
+    })
+
+   
 
 
 
