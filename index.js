@@ -42,7 +42,6 @@ const run = () => {
   const usersCollection = client.db("betacom").collection("users");
   const bookingsCollection = client.db("betacom").collection("booking");
   const paymentsCollection = client.db("betacom").collection("payment")
-  const sellersProductCollection = client.db("betacom").collection("SellersProduct")
 
   try {
     app.post("/jwt", (req, res) => {
@@ -64,6 +63,7 @@ const run = () => {
       res.send(result);
     });
 
+   
     app.post('/users',async(req,res)=>{
       const user = req.body;
       console.log(user);
@@ -89,6 +89,34 @@ const run = () => {
       const user = await usersCollection.findOne(query);
       res.send({ isNormalUser: user?.accountType === "normalUser" });
     });
+    app.get('/users/sellers',async(req,res)=>{
+      const query= {accountType: "sellerAccount"}
+      const result  =  await usersCollection.find(query).toArray()
+      res.send(result);
+    })
+    app.get('/users/buyers',async(req,res)=>{
+      const query= {accountType: "normalUser"}
+      const result  =  await usersCollection.find(query).toArray()
+      res.send(result);
+    })
+
+    app.put('/users/verify/:email',async(req,res)=>{
+      const user = req.params.email;
+      const filter = {email : user}
+      const updatedDoc = {
+        $set:{
+          isVerifyed:true
+        }
+      }
+      const update  ={
+        $set:{
+          isVerifyed:true
+        }
+      }
+      const up = await productsCollection.updateOne(filter,update);
+      const result = await usersCollection.updateOne(filter,updatedDoc);
+      res.send(result);
+    })
 
     app.post('/bookings',async(req,res)=>{
       const booking =  req.body;
@@ -162,9 +190,35 @@ const run = () => {
       const query = {email : email};
       const products =  await productsCollection.find(query).toArray();
       res.send(products);
-
+    })
+    
+    app.put('/products/:id',async(req,res)=>{
+      const id =req.params.id;
+      const filter = {_id:ObjectId(id)}
+      const updatedDoc = {
+        $set:{
+          advertise:true
+        }
+      }
+      const updatedResult = await productsCollection.updateOne(filter,updatedDoc);
+      res.send(updatedResult);
+      
+    })
+    app.delete('/products/:id',async(req,res)=>{
+      const id =  req.params.id;
+      const filter = {_id:ObjectId(id)}
+      const result =  await productsCollection.deleteOne(filter);
+      res.send(result);
+    })
+    
+    app.get('/product/advertisedProduct',async(req,res)=>{
+      const query ={ advertise:true}
+      const result = await productsCollection.find(query).toArray();
+      res.send(result)
     })
 
+
+    
    
 
 
