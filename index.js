@@ -85,8 +85,6 @@ const run = () => {
       const unPaidProduct = result.filter((p) => p.paid !== true);
       res.send(unPaidProduct);
     });
-     
-    
 
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -96,7 +94,6 @@ const run = () => {
       console.log(users);
       const checking = users.forEach((e) => e.email !== user.email);
       console.log(checking);
-      // if(user.email )
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
@@ -138,29 +135,34 @@ const run = () => {
       res.send(result);
     });
 
-    app.put("/users/verify/:email", verifyJWT, verifyAdmin,  async (req, res) => {
-      const user = req.params.email;
-      const filter = { email: user };
-      const updatedDoc = {
-        $set: {
-          isVerifyed: true,
-        },
-      };
-      const update = {
-        $set: {
-          isVerifyed: true,
-        },
-      };
-      const up = await productsCollection.updateMany(filter, update);
-      const result = await usersCollection.updateOne(filter, updatedDoc);
+    app.put(
+      "/users/verify/:email",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const user = req.params.email;
+        const filter = { email: user };
+        const updatedDoc = {
+          $set: {
+            isVerifyed: true,
+          },
+        };
+        const update = {
+          $set: {
+            isVerifyed: true,
+          },
+        };
+        const up = await productsCollection.updateMany(filter, update);
+        const result = await usersCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
+    );
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.find(query).toArray();
       res.send(result);
     });
-    app.get('/users/:email',async(req,res)=>{
-      const email = req.params.email
-      const query = {email:email}
-      const result = await usersCollection.find(query).toArray()
-      res.send(result);
-    })
 
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
@@ -187,7 +189,7 @@ const run = () => {
       const result = await bookingsCollection.findOne(filter);
       res.send(result);
     });
-    
+
     app.post("/create-payment-intent", async (req, res) => {
       const booking = req.body;
       const price = booking.ResalePrice;
@@ -251,7 +253,7 @@ const run = () => {
       res.send(products);
     });
 
-    app.put("/products/:id", verifyJWT,verifySeller, async (req, res) => {
+    app.put("/products/:id", verifyJWT, verifySeller, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const updatedDoc = {
@@ -276,46 +278,38 @@ const run = () => {
       const query = { advertise: true };
       const result = await productsCollection.find(query).toArray();
       console.log(result);
-      const mainProducts = result.filter(p => p.paid !== true)
+      const mainProducts = result.filter((p) => p.paid !== true);
       res.send(mainProducts);
     });
 
-    
-
-
-    app.get('/reports',verifyJWT, verifyAdmin, async(req,res)=>{
-      const query ={}
-      const result =  await reportedCollection.find(query).toArray()
+    app.get("/reports", verifyJWT, verifyAdmin, async (req, res) => {
+      const query = {};
+      const result = await reportedCollection.find(query).toArray();
       res.send(result);
-    })
+    });
 
-
-    app.post('/report/:id', async(req,res)=>{
+    app.post("/report/:id", async (req, res) => {
       const reportedProduct = req.body;
-      const id = req.params.id
-      const filter = {_id: ObjectId(id)}
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
       const updatedDoc = {
-        $set:{
-          reported: true
-        }
-      }
-      const up = await productsCollection.updateOne(filter,updatedDoc);
+        $set: {
+          reported: true,
+        },
+      };
+      const up = await productsCollection.updateOne(filter, updatedDoc);
       const result = await reportedCollection.insertOne(reportedProduct);
-      res.send(result)
-      
-    })
+      res.send(result);
+    });
 
-    app.delete('/report/:id',verifyJWT, verifyAdmin,async(req,res)=>{
-      const productId =  req.params.id;
-      const filter = {productId:productId}
-      // console.log(fillter)
-      const ftr = {_id:ObjectId(productId)};
+    app.delete("/report/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const productId = req.params.id;
+      const filter = { productId: productId };
+      const ftr = { _id: ObjectId(productId) };
       const deleteProduct = await productsCollection.deleteOne(ftr);
-      const result = await reportedCollection.deleteOne(filter)
-      res.send(result)
-    })
-
-
+      const result = await reportedCollection.deleteOne(filter);
+      res.send(result);
+    });
   } finally {
   }
 };
