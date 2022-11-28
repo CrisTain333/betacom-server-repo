@@ -4,9 +4,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const cors = require("cors");
 const PORT = process.env.PORT || 5000;
-const stripe = require("stripe")(
-  "sk_test_51M6vf8CjesRvr76mn5Rs6kQEDldjatE6CZ1ontkOVGAdhhCh2wsYGPkvlxkWgoAd82yg9AgcWkwQWXknsI4omyTW00fpCUn68P"
-);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 require("dotenv").config();
@@ -54,6 +52,16 @@ const run = () => {
     }
     next();
   };
+  const verifyAdmin = async (req, res, next) => {
+    const decodedEmail = req.decoded.email;
+    const query = { email: decodedEmail };
+    const user = await usersCollection.findOne(query);
+
+    if (user?.role !== "admin") {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+    next();
+  };
 
   try {
     app.post("/jwt", (req, res) => {
@@ -77,6 +85,8 @@ const run = () => {
       const unPaidProduct = result.filter((p) => p.paid !== true);
       res.send(unPaidProduct);
     });
+     
+    
 
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -128,7 +138,7 @@ const run = () => {
       res.send(result);
     });
 
-    app.put("/users/verify/:email", async (req, res) => {
+    app.put("/users/verify/:email", verifyJWT, verifyAdmin,  async (req, res) => {
       const user = req.params.email;
       const filter = { email: user };
       const updatedDoc = {
@@ -145,6 +155,12 @@ const run = () => {
       const result = await usersCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
+    app.get('/users/:email',async(req,res)=>{
+      const email = req.params.email
+      const query = {email:email}
+      const result = await usersCollection.find(query).toArray()
+      res.send(result);
+    })
 
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
@@ -235,7 +251,7 @@ const run = () => {
       res.send(products);
     });
 
-    app.put("/products/:id", async (req, res) => {
+    app.put("/products/:id", verifyJWT,verifySeller, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const updatedDoc = {
@@ -259,10 +275,15 @@ const run = () => {
     app.get("/product/advertisedProduct", async (req, res) => {
       const query = { advertise: true };
       const result = await productsCollection.find(query).toArray();
-      res.send(result);
+      console.log(result);
+      const mainProducts = result.filter(p => p.paid !== true)
+      res.send(mainProducts);
     });
 
-    app.get('/reports',verifyJWT, async(req,res)=>{
+    
+
+
+    app.get('/reports',verifyJWT, verifyAdmin, async(req,res)=>{
       const query ={}
       const result =  await reportedCollection.find(query).toArray()
       res.send(result);
@@ -284,7 +305,7 @@ const run = () => {
       
     })
 
-    app.delete('/report/:id',async(req,res)=>{
+    app.delete('/report/:id',verifyJWT, verifyAdmin,async(req,res)=>{
       const productId =  req.params.id;
       const filter = {productId:productId}
       // console.log(fillter)
