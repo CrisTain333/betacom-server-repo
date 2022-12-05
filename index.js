@@ -86,6 +86,7 @@ const run = () => {
       res.send(unPaidProduct);
     });
 
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       console.log(user);
@@ -124,6 +125,14 @@ const run = () => {
       const user = await usersCollection.findOne(query);
       res.send({ isNormalUser: user?.accountType === "normalUser" });
     });
+
+    app.get('/users/isVerified/:email',async(req,res)=>{
+      const email =  req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isVerified: user?.isVerifyed === true });
+    })
+
     app.get("/users/sellers", async (req, res) => {
       const query = { accountType: "sellerAccount" };
       const result = await usersCollection.find(query).toArray();
