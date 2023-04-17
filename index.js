@@ -8,6 +8,12 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 require("dotenv").config();
+const { Configuration, OpenAIApi } = require("openai");
+const configuration = new Configuration({
+  organization: "org-3cOcBNDZaYZSIUeat6F4rgc7",
+  apiKey: process.env.OPEN_AI_API_KEY,
+});
+const openAi = new OpenAIApi(configuration);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@practicebaba.aon4ndq.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
@@ -86,7 +92,6 @@ const run = () => {
       res.send(unPaidProduct);
     });
 
-
     app.post("/users", async (req, res) => {
       const user = req.body;
       console.log(user);
@@ -104,6 +109,22 @@ const run = () => {
       const filter = { _id: ObjectId(id) };
       const result = await usersCollection.deleteOne(filter);
       res.send(result);
+    });
+
+    app.post("/ai/ask", async (req, res) => {
+      const { message } = req?.body;
+      const response = await openAi.createCompletion({
+        model: "text-davinci-003",
+        prompt: `${message}`,
+        max_tokens: 100,
+        temperature: 0.5,
+      });
+      res.json({ data: response?.data?.choices[0].text });
+      return {
+        data: response?.data?.choices[0].text,
+        status: 201,
+        message: "Success",
+      };
     });
 
     app.get("/users/admin/:email", async (req, res) => {
@@ -126,12 +147,12 @@ const run = () => {
       res.send({ isNormalUser: user?.accountType === "normalUser" });
     });
 
-    app.get('/users/isVerified/:email',async(req,res)=>{
-      const email =  req.params.email;
+    app.get("/users/isVerified/:email", async (req, res) => {
+      const email = req.params.email;
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isVerified: user?.isVerifyed === true });
-    })
+    });
 
     app.get("/users/sellers", async (req, res) => {
       const query = { accountType: "sellerAccount" };
