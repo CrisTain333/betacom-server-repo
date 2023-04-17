@@ -111,6 +111,7 @@ const run = () => {
       res.send(result);
     });
 
+    // open ai
     app.post("/ai/ask", async (req, res) => {
       const { message } = req?.body;
       const response = await openAi.createCompletion({
